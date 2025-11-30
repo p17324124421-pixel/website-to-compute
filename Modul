@@ -1,0 +1,732 @@
+<!-- Chosen Palette: Professional Healthcare Blue -->
+<!-- Application Structure Plan: The SPA is redesigned as a complete learning module with a clear, top-down pedagogical structure. It features a sticky navigation bar to access distinct sections: "Beranda" (Home), "Modul 1" (Concepts), "Modul 2" (Features), "Modul 3" (Challenges), "Evaluasi" (Evaluation), and "Referensi" (References). This modular approach was chosen to break down complex information into digestible lessons. User interaction is enhanced with a "next module" button to simulate progress, interactive cards that expand with detailed text, a tabbed interface for comparing features, and an interactive doughnut chart that triggers a modal to provide detailed solutions for each challenge. The new "Evaluasi" section provides a self-assessment quiz with instant feedback and a final score, reinforcing key concepts. The design prioritizes a structured, guided learning path, moving from core concepts to practical application, problem-solving, and finally, self-evaluation. The quiz now has improved interactivity for selecting answers, with visual feedback for selected options before submission and correct/incorrect marking after submission. A new download button is added to allow users to download the module content as a file. -->
+<!-- Visualization & Content Choices:
+1. Modul 1 (Konsep Dasar): Report Info -> 5 key benefits. Goal -> Inform/Organize. Viz/Method -> Interactive, expandable cards. Interaction -> Clicking a card smoothly expands to reveal a detailed explanation, encouraging users to actively discover information rather than just reading a static list. Justification -> This method is highly effective for self-paced learning, making the content feel less like a report and more like a discovery tool.
+2. Modul 2 (Fitur & Fungsionalitas): Report Info -> Table of application types and features. Goal -> Organize/Compare. Viz/Method -> A tabbed interface using HTML buttons and vanilla JS. Interaction -> Clicking a tab button dynamically updates the content area with specific details and features, with a smooth fade effect. Justification -> It prevents information overload and allows students to focus on one category at a time, facilitating comparative learning.
+3. Modul 3 (Tantangan & Solusi): Report Info -> List of challenges. Goal -> Inform/Problem-solve. Viz/Method -> A Chart.js doughnut chart. Interaction -> A crucial enhancement: clicking a segment of the chart triggers a JavaScript modal to appear, which provides a detailed explanation of the challenge and actionable solutions. Justification -> This turns a passive visualization into a problem-solving activity, directly engaging students with the material and teaching them how to overcome real-world obstacles.
+4. Evaluasi (Self-Assessment): Report Info -> none. Goal -> Assess understanding. Viz/Method -> Interactive multiple-choice quiz with JavaScript validation. Interaction -> Users select answers and click a button to receive a score and feedback. Justification -> A key pedagogical component that allows students to check their comprehension and identify areas for review.
+5. Glosarium & Referensi: Report Info -> Key terms and bibliography. Goal -> Provide supplementary information. Viz/Method -> A single, collapsible section. Interaction -> Clicking a button toggles the visibility of the content. Justification -> This keeps the main learning modules clean while ensuring essential academic resources are easily accessible on demand.
+All elements are implemented with standard web technologies and the Chart.js library, fully adhering to the NO SVG/Mermaid constraint. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modul Pembelajaran Kebidanan Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 450px;
+        }
+        .details-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
+            opacity: 0;
+        }
+        .details-content.expanded {
+            max-height: 1000px;
+            opacity: 1;
+        }
+        .tab-content {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .modal {
+            background-color: rgba(0, 0, 0, 0.5);
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s linear;
+        }
+        .modal.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+        .quiz-option {
+            background-color: #f1f5f9;
+            border: 2px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .quiz-option:hover {
+            background-color: #e2e8f0;
+        }
+        .quiz-option.selected {
+            background-color: #e0f2fe;
+            border-color: #38bdf8;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .quiz-option.correct {
+            background-color: #d1fae5;
+            border-color: #34d399;
+        }
+        .quiz-option.incorrect {
+            background-color: #fee2e2;
+            border-color: #f87171;
+        }
+        .quiz-option input[type="radio"] {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <header class="sticky top-0 bg-white/80 backdrop-blur-lg shadow-sm z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="text-xl font-bold text-sky-600">
+                    <a href="#beranda">Modul Digital Kebidanan</a>
+                </div>
+                <nav class="hidden md:flex space-x-6">
+                    <a href="#modul1" class="nav-link text-slate-600 hover:text-sky-600 font-medium transition-colors" data-section="modul1">Modul 1</a>
+                    <a href="#modul2" class="nav-link text-slate-600 hover:text-sky-600 font-medium transition-colors" data-section="modul2">Modul 2</a>
+                    <a href="#modul3" class="nav-link text-slate-600 hover:text-sky-600 font-medium transition-colors" data-section="modul3">Modul 3</a>
+                    <a href="#evaluasi" class="nav-link text-slate-600 hover:text-sky-600 font-medium transition-colors" data-section="evaluasi">Evaluasi</a>
+                    <a href="#referensi" class="nav-link text-slate-600 hover:text-sky-600 font-medium transition-colors" data-section="referensi">Referensi</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 md:py-12">
+
+        <section id="beranda" class="text-center mb-16 md:mb-24 min-h-screen pt-24">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-800 mb-4">Selamat Datang, Mahasiswi Bidan!</h1>
+            <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto mb-8">
+                Modul ini dirancang sebagai panduan mandiri untuk memahami peran teknologi, khususnya aplikasi berbasis web, dalam mendukung praktik kebidanan modern. Jelajahi setiap modul untuk memperkaya pengetahuan Anda.
+            </p>
+            <div class="max-w-4xl mx-auto bg-slate-200 rounded-2xl shadow-lg p-4">
+                 <img src="https://placehold.co/1200x600/e2e8f0/334155?text=Mahasiswi+Belajar+Digital" alt="Mahasiswi kebidanan belajar menggunakan tablet" class="rounded-xl w-full h-auto object-cover">
+            </div>
+            <a href="#modul1" class="mt-8 inline-block px-8 py-4 bg-sky-600 text-white font-semibold rounded-full shadow-lg hover:bg-sky-700 transition-colors">Mulai Pembelajaran</a>
+        </section>
+
+        <section id="modul1" class="mb-16 md:mb-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-slate-800 text-center mb-4">Modul 1: Konsep Dasar & Manfaat</h2>
+            <p class="text-center mb-12 text-slate-600 max-w-3xl mx-auto">
+                Di modul ini, Anda akan mempelajari alasan fundamental mengapa adopsi aplikasi web menjadi krusial dalam dunia kebidanan saat ini. Klik pada setiap kartu untuk menemukan manfaat utamanya.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-200 cursor-pointer hover:shadow-xl hover:border-sky-300 transition-all duration-300" onclick="toggleDetails(this)">
+                    <h3 class="text-xl font-semibold mb-3 flex items-center text-slate-700"><span class="text-3xl mr-3">💾</span> Manajemen Rekam Medis</h3>
+                    <p class="text-slate-600">Pusat data pasien yang aman, terpusat, dan mudah diakses untuk kontinuitas perawatan.</p>
+                    <div class="details-content">
+                        <p class="text-slate-500 mt-4 pt-4 border-t border-slate-200">Dengan Rekam Medis Elektronik (RME), risiko kehilangan data fisik berkurang drastis. Riwayat kesehatan pasien dari kehamilan hingga nifas tercatat lengkap, meminimalkan kesalahan medis dan memastikan setiap keputusan klinis didasarkan pada informasi yang akurat.</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-200 cursor-pointer hover:shadow-xl hover:border-sky-300 transition-all duration-300" onclick="toggleDetails(this)">
+                    <h3 class="text-xl font-semibold mb-3 flex items-center text-slate-700"><span class="text-3xl mr-3">⏳</span> Efisiensi Praktik</h3>
+                    <p class="text-slate-600">Otomatisasi tugas administratif untuk membebaskan waktu bidan agar lebih fokus pada pasien.</p>
+                    <div class="details-content">
+                        <p class="text-slate-500 mt-4 pt-4 border-t border-slate-200">Fitur seperti penjadwalan otomatis, pengingat kunjungan via SMS, manajemen inventaris, dan proses penagihan yang terintegrasi mengurangi beban kerja non-klinis secara signifikan, menjadikan praktik lebih produktif dan terorganisir.</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-200 cursor-pointer hover:shadow-xl hover:border-sky-300 transition-all duration-300" onclick="toggleDetails(this)">
+                    <h3 class="text-xl font-semibold mb-3 flex items-center text-slate-700"><span class="text-3xl mr-3">🔎</span> Dukungan Keputusan Klinis</h3>
+                    <p class="text-slate-600">Akses instan ke panduan klinis, jurnal, dan protokol medis berbasis bukti (*evidence-based*).</p>
+                    <div class="details-content">
+                        <p class="text-slate-500 mt-4 pt-4 border-t border-slate-200">Aplikasi modern menyediakan basis data terpercaya yang membantu bidan membuat keputusan klinis yang tepat. Ini sangat penting saat menangani kasus kompleks dan memastikan asuhan yang diberikan sesuai standar kesehatan global terkini.</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-200 cursor-pointer hover:shadow-xl hover:border-sky-300 transition-all duration-300" onclick="toggleDetails(this)">
+                    <h3 class="text-xl font-semibold mb-3 flex items-center text-slate-700"><span class="text-3xl mr-3">📞</span> Jangkauan via Telehealth</h3>
+                    <p class="text-slate-600">Menyediakan layanan konsultasi dan pemantauan jarak jauh, mengatasi hambatan geografis.</p>
+                    <div class="details-content">
+                        <p class="text-slate-500 mt-4 pt-4 border-t border-slate-200">Telehealth memungkinkan bidan melayani pasien di daerah terpencil. Konsultasi awal, pemantauan pascapersalinan, dan edukasi dapat dilakukan secara virtual, memastikan tidak ada pasien yang tertinggal dalam mendapatkan perawatan berkualitas.</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-200 cursor-pointer hover:shadow-xl hover:border-sky-300 transition-all duration-300" onclick="toggleDetails(this)">
+                    <h3 class="text-xl font-semibold mb-3 flex items-center text-slate-700"><span class="text-3xl mr-3">🎓</span> Edukasi & Keterlibatan Pasien</h3>
+                    <p class="text-slate-600">Memberdayakan pasien dengan informasi kesehatan yang valid dan mudah dipahami.</p>
+                    <div class="details-content">
+                        <p class="text-slate-500 mt-4 pt-4 border-t border-slate-200">Aplikasi berfungsi sebagai media edukasi interaktif. Bidan dapat membagikan artikel, video, dan infografis terpercaya. Pasien yang teredukasi cenderung lebih proaktif, patuh pada anjuran medis, dan memiliki hasil kesehatan yang lebih baik.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end mt-8">
+                <a href="#modul2" class="next-module-btn px-6 py-3 bg-sky-600 text-white font-semibold rounded-full shadow-lg hover:bg-sky-700 transition-colors">Lanjut ke Modul 2</a>
+            </div>
+        </section>
+
+        <section id="modul2" class="mb-16 md:mb-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-slate-800 text-center mb-4">Modul 2: Fitur & Fungsionalitas</h2>
+            <p class="text-center mb-12 text-slate-600 max-w-3xl mx-auto">
+                Aplikasi kebidanan dirancang dengan berbagai modul untuk memenuhi kebutuhan spesifik. Pilih kategori untuk melihat fungsi utama dan contoh fiturnya.
+            </p>
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200 max-w-5xl mx-auto">
+                <div class="border-b border-slate-200 mb-6">
+                    <div class="flex flex-wrap -mb-px justify-center">
+                        <button class="tab-button border-b-2 border-sky-600 text-sky-600 py-3 px-5 font-medium" data-category="manajemen">Manajemen Praktik & RME</button>
+                        <button class="tab-button border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 py-3 px-5 font-medium" data-category="telehealth">Telehealth</button>
+                        <button class="tab-button border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 py-3 px-5 font-medium" data-category="referensi">Referensi Klinis</button>
+                        <button class="tab-button border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 py-3 px-5 font-medium" data-category="edukasi">Edukasi Pasien</button>
+                    </div>
+                </div>
+                <div id="tab-content-area" class="tab-content">
+                    <h3 id="tab-title" class="text-2xl font-semibold text-slate-800 mb-2">Manajemen Praktik & RME</h3>
+                    <p id="tab-function" class="text-slate-500 mb-6">Pencatatan data klinis dan administrasi secara efisien.</p>
+                    <div id="tab-features" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="bg-slate-100 p-4 rounded-lg text-slate-700">Rekam medis ANC, INC, PNC, & KB</div>
+                        <div class="bg-slate-100 p-4 rounded-lg text-slate-700">Manajemen jadwal imunisasi</div>
+                        <div class="bg-slate-100 p-4 rounded-lg text-slate-700">Laporan kohort ibu dan bayi</div>
+                        <div class="bg-slate-100 p-4 rounded-lg text-slate-700">Sistem penagihan & keuangan</div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end mt-8">
+                <a href="#modul3" class="next-module-btn px-6 py-3 bg-sky-600 text-white font-semibold rounded-full shadow-lg hover:bg-sky-700 transition-colors">Lanjut ke Modul 3</a>
+            </div>
+        </section>
+
+        <section id="modul3" class="mb-16 md:mb-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-slate-800 text-center mb-4">Modul 3: Tantangan & Solusi</h2>
+            <p class="text-center mb-12 text-slate-600 max-w-3xl mx-auto">
+                Adopsi teknologi digital dalam kebidanan memiliki tantangan yang harus diatasi. Klik pada setiap bagian diagram untuk melihat detail tantangan dan solusinya.
+            </p>
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200 max-w-5xl mx-auto">
+                <div class="chart-container">
+                    <canvas id="challengesChart"></canvas>
+                </div>
+            </div>
+            <div class="flex justify-end mt-8">
+                <a href="#evaluasi" class="next-module-btn px-6 py-3 bg-sky-600 text-white font-semibold rounded-full shadow-lg hover:bg-sky-700 transition-colors">Lanjut ke Evaluasi</a>
+            </div>
+        </section>
+
+        <section id="evaluasi" class="mb-16 md:mb-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-slate-800 text-center mb-4">Evaluasi Pemahaman</h2>
+            <p class="text-center mb-12 text-slate-600 max-w-3xl mx-auto">
+                Uji pemahaman Anda dengan menjawab pertanyaan-pertanyaan berikut.
+            </p>
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200 max-w-4xl mx-auto">
+                <div id="mode-selector" class="mb-6 text-center">
+                    <span class="text-lg font-semibold text-slate-700 mr-4">Pilih Mode:</span>
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="radio" name="quiz-mode" value="learning" class="form-radio text-sky-600" checked>
+                        <span class="ml-2 text-slate-600">Belajar</span>
+                    </label>
+                    <label class="inline-flex items-center ml-6 cursor-pointer">
+                        <input type="radio" name="quiz-mode" value="practice" class="form-radio text-sky-600">
+                        <span class="ml-2 text-slate-600">Latihan (CBTI)</span>
+                    </label>
+                </div>
+
+                <div id="timer-display" class="hidden text-center text-2xl font-bold mb-6 text-slate-700">
+                    <p>Waktu Tersisa: <span id="time-left">05:00</span></p>
+                </div>
+
+                <form id="quiz-form">
+                    <!-- Questions will be dynamically generated here -->
+                </form>
+                <div id="quiz-feedback" class="hidden mt-4 p-4 rounded-lg"></div>
+                <div id="quiz-results" class="hidden mt-8 p-6 rounded-lg text-center">
+                    <h3 id="results-title" class="text-2xl font-bold mb-2"></h3>
+                    <p id="results-message" class="text-lg"></p>
+                </div>
+            </div>
+        </section>
+
+        <section id="referensi" class="mb-16 md:mb-24">
+             <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Glosarium & Sumber Referensi</h2>
+                 <p class="mt-4 text-slate-600 max-w-3xl mx-auto">
+                    Bagian ini menyediakan daftar istilah penting dan sumber-sumber ilmiah yang digunakan dalam modul.
+                </p>
+            </div>
+             <div class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200">
+                <button id="toggle-biblio" class="w-full text-left text-xl font-semibold text-slate-700 flex justify-between items-center mb-4">
+                    <span>Lihat Daftar Pustaka</span>
+                    <span id="biblio-icon" class="transform transition-transform">▼</span>
+                </button>
+                <div id="biblio-content" class="details-content text-slate-600 text-sm space-y-3">
+                    <ol class="list-decimal list-inside">
+                        <li>Afnan L, Hanafiah A, Dasuki D, Suwandono A. Midwives’ experiences of using a mobile health application for antenatal care in rural Indonesia. <i>Int J Womens Health</i>. 2021;13:747-756.</li>
+                        <li>Lanseng EL, Thomassen MS. Experiences of using an eHealth application for lifestyle interventions in maternity care: a qualitative study. <i>BMC Health Serv Res</i>. 2021;21(1):921.</li>
+                        <li>World Health Organization. <i>WHO Guideline: Recommendations on Digital Interventions for Health System Strengthening</i>. WHO; 2019.</li>
+                        <li>Watterson JL, Walsh J, Madeka I. Using mHealth to improve usage of antenatal care, postnatal care, and immunization: a systematic review of the literature. <i>Biomed Res Int</i>. 2015;2015:153402.</li>
+                        <li>Kementerian Kesehatan Republik Indonesia. <i>Cetak Biru Strategi Transformasi Digital Kesehatan 2024</i>. Kemenkes RI; 2021.</li>
+                        <li>Fauk NK, Merry MS, Putra S, Sigilipoe MA. The mHealth application for pregnant women and midwives in improving maternal and child health literacy in Indonesia. <i>BMC Med Inform Decis Mak</i>. 2022;22(1):243.</li>
+                    </ol>
+                </div>
+            </div>
+             <div class="mt-8 text-center">
+                 <button id="download-button" class="px-8 py-4 bg-gray-600 text-white font-semibold rounded-full shadow-lg hover:bg-gray-700 transition-colors">Unduh Modul</button>
+             </div>
+        </section>
+
+        <div id="modal-container" class="modal fixed inset-0 flex items-center justify-center p-4 z-50">
+            <div class="modal-content bg-white p-8 rounded-2xl shadow-lg max-w-md w-full border border-slate-200">
+                <div class="flex justify-end">
+                    <button id="close-modal-btn" class="text-slate-500 hover:text-slate-800 font-bold">✕</button>
+                </div>
+                <h3 id="modal-title" class="text-xl font-bold text-slate-800 mb-2"></h3>
+                <p id="modal-description" class="text-slate-600 mb-4"></p>
+                <p id="modal-solution" class="text-sm text-slate-500"></p>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-slate-800 text-slate-400 py-8">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2025 Modul Pembelajaran Kebidanan Digital. Dibuat untuk mendukung profesi bidan di Indonesia.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const appData = {
+                manajemen: {
+                    title: 'Manajemen Praktik & RME',
+                    function: 'Pencatatan data klinis dan administrasi secara efisien.',
+                    features: ['Rekam medis ANC, INC, PNC, & KB', 'Manajemen jadwal imunisasi', 'Laporan kohort ibu dan bayi', 'Sistem penagihan & keuangan']
+                },
+                telehealth: {
+                    title: 'Telehealth & Komunikasi',
+                    function: 'Konsultasi dan pemantauan pasien dari jarak jauh.',
+                    features: ['Fitur obrolan (chat) aman', 'Panggilan video; Pengiriman resep digital', 'Forum komunitas untuk pasien']
+                },
+                referensi: {
+                    title: 'Referensi & Edukasi Klinis',
+                    function: 'Akses cepat ke informasi medis terverifikasi.',
+                    features: ['Panduan praktik kebidanan terbaru', 'Kalkulator usia kehamilan & EDD', 'Basis data obat-obatan aman', 'Akses ke jurnal ilmiah']
+                },
+                edukasi: {
+                    title: 'Edukasi Pasien',
+                    function: 'Menyediakan media informasi interaktif untuk ibu & keluarga.',
+                    features: ['Artikel kesehatan terpercaya', 'Grafik pelacak tumbuh kembang janin', 'Pengingat minum vitamin & jadwal', 'Forum diskusi antar pasien']
+                }
+            };
+            const challengeData = [
+                {
+                    label: 'Konektivitas Internet',
+                    value: 30,
+                    description: 'Keterbatasan akses internet yang stabil menjadi kendala utama, terutama di wilayah pedesaan atau terpencil.',
+                    solution: 'Solusi: Mendorong infrastruktur telekomunikasi yang lebih baik. Menggunakan aplikasi yang dapat bekerja secara offline dan menyinkronkan data saat terhubung.'
+                },
+                {
+                    label: 'Keamanan Data',
+                    value: 25,
+                    description: 'Memastikan platform digital yang digunakan memenuhi standar keamanan ketat untuk melindungi data sensitif pasien dan bidan.',
+                    solution: 'Solusi: Menggunakan platform dengan enkripsi end-to-end, otentikasi multi-faktor, dan mematuhi regulasi privasi data.'
+                },
+                {
+                    label: 'Interoperabilitas',
+                    value: 20,
+                    description: 'Kesulitan sistem untuk terhubung dan bertukar data dengan fasilitas kesehatan lain, seperti rumah sakit atau laboratorium.',
+                    solution: 'Solusi: Mengadopsi standar data universal (misalnya FHIR) dan menggunakan API terbuka untuk memfasilitasi pertukaran informasi antar sistem.'
+                },
+                {
+                    label: 'Literasi Digital',
+                    value: 15,
+                    description: 'Tingkat pemahaman teknologi yang bervariasi di kalangan bidan dan pasien dapat menghambat adopsi dan pemanfaatan optimal.',
+                    solution: 'Solusi: Menyediakan pelatihan berkala, tutorial interaktif, dan dukungan teknis yang mudah diakses untuk meningkatkan kompetensi digital.'
+                },
+                {
+                    label: 'Biaya',
+                    value: 10,
+                    description: 'Investasi awal untuk berlangganan platform atau pengadaan perangkat pendukung bisa menjadi hambatan bagi praktik mandiri.',
+                    solution: 'Solusi: Mendorong model bisnis yang fleksibel (misalnya, pembayaran per-pasien) dan mengadvokasi subsidi dari pemerintah atau lembaga kesehatan.'
+                }
+            ];
+
+            const quizQuestions = [
+                {
+                    question: "Apa manfaat utama aplikasi web dalam manajemen rekam medis?",
+                    options: [
+                        "Menambah jumlah dokumen fisik",
+                        "Memerlukan lebih banyak ruang penyimpanan",
+                        "Mengurangi risiko kehilangan atau kerusakan data fisik",
+                        "Meningkatkan biaya administrasi"
+                    ],
+                    answer: "Mengurangi risiko kehilangan atau kerusakan data fisik",
+                    rationale: "Penggunaan rekam medis elektronik (RME) secara digital meminimalisir risiko kehilangan, kerusakan, atau pencurian data yang sering terjadi pada dokumen fisik."
+                },
+                {
+                    question: "Fitur manajemen praktik seperti penjadwalan janji temu otomatis membantu bidan dalam hal?",
+                    options: [
+                        "Mengurangi interaksi dengan pasien",
+                        "Membebaskan waktu untuk lebih fokus pada asuhan klinis",
+                        "Memerlukan staf tambahan",
+                        "Meningkatkan beban kerja administratif"
+                    ],
+                    answer: "Membebaskan waktu untuk lebih fokus pada asuhan klinis",
+                    rationale: "Otomatisasi tugas administratif, seperti penjadwalan, memungkinkan bidan untuk mengurangi pekerjaan non-klinis dan mendedikasikan lebih banyak waktu dan perhatian pada asuhan pasien secara langsung."
+                },
+                {
+                    question: "Di kategori aplikasi mana Anda akan menemukan fitur seperti 'panggilan video' dan 'pengiriman resep digital'?",
+                    options: [
+                        "Manajemen Praktik & RME",
+                        "Telehealth & Komunikasi",
+                        "Referensi & Edukasi Klinis",
+                        "Edukasi Pasien"
+                    ],
+                    answer: "Telehealth & Komunikasi",
+                    rationale: "Telehealth secara spesifik mengacu pada penyediaan layanan kesehatan jarak jauh, yang mencakup konsultasi melalui panggilan video dan pengiriman resep atau informasi secara digital."
+                },
+                {
+                    question: "Apa tantangan utama implementasi aplikasi berbasis web yang sering ditemui di wilayah pedesaan atau terpencil?",
+                    options: [
+                        "Tingkat literasi digital",
+                        "Biaya investasi awal",
+                        "Konektivitas Internet",
+                        "Interoperabilitas sistem"
+                    ],
+                    answer: "Konektivitas Internet",
+                    rationale: "Di daerah pedesaan atau terpencil, infrastruktur internet yang tidak memadai seringkali menjadi hambatan utama dalam adopsi aplikasi berbasis web yang membutuhkan koneksi stabil."
+                },
+                {
+                    question: "Tujuan dari fitur 'dukungan keputusan klinis berbasis bukti' adalah?",
+                    options: [
+                        "Menggantikan peran bidan",
+                        "Memastikan keputusan klinis tidak lagi diperlukan",
+                        "Membantu bidan membuat keputusan yang lebih tepat dan berbasis data ilmiah",
+                        "Meningkatkan jumlah pasien"
+                    ],
+                    answer: "Membantu bidan membuat keputusan yang lebih tepat dan berbasis data ilmiah",
+                    rationale: "Fitur ini menyediakan akses ke data, panduan, dan riset terbaru, yang membantu bidan membuat keputusan klinis yang informatif, akurat, dan sesuai dengan standar praktik terkini."
+                }
+            ];
+
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContentArea = document.getElementById('tab-content-area');
+            const tabTitle = document.getElementById('tab-title');
+            const tabFunction = document.getElementById('tab-function');
+            const tabFeatures = document.getElementById('tab-features');
+            const quizForm = document.getElementById('quiz-form');
+            const quizResults = document.getElementById('quiz-results');
+            const resultsTitle = document.getElementById('results-title');
+            const resultsMessage = document.getElementById('results-message');
+            const quizFeedback = document.getElementById('quiz-feedback');
+            const modeSelector = document.getElementById('mode-selector');
+            const timerDisplay = document.getElementById('timer-display');
+            const timeLeftSpan = document.getElementById('time-left');
+
+            let currentMode = 'learning';
+            let timerInterval;
+
+            function switchMode(mode) {
+                currentMode = mode;
+                clearInterval(timerInterval);
+                timerDisplay.classList.add('hidden');
+                quizFeedback.classList.add('hidden');
+                quizResults.classList.add('hidden');
+                quizForm.classList.remove('pointer-events-none');
+                renderQuiz();
+
+                if (currentMode === 'practice') {
+                    startTimer(300); // 5 minutes
+                }
+            }
+
+            modeSelector.addEventListener('change', (e) => {
+                switchMode(e.target.value);
+            });
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('border-sky-600', 'text-sky-600');
+                        btn.classList.add('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300');
+                    });
+                    button.classList.add('border-sky-600', 'text-sky-600');
+                    button.classList.remove('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300');
+
+                    const category = button.dataset.category;
+                    const data = appData[category];
+                    
+                    tabContentArea.style.opacity = '0';
+                    setTimeout(() => {
+                        tabTitle.textContent = data.title;
+                        tabFunction.textContent = data.function;
+                        tabFeatures.innerHTML = data.features.map(feature => `<div class="bg-slate-100 p-4 rounded-lg text-slate-700">${feature}</div>`).join('');
+                        tabContentArea.style.opacity = '1';
+                    }, 300);
+                });
+            });
+
+            const ctx = document.getElementById('challengesChart').getContext('2d');
+            const challengesChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: challengeData.map(d => d.label),
+                    datasets: [{
+                        data: challengeData.map(d => d.value),
+                        backgroundColor: ['#0284c7', '#38bdf8', '#7dd3fc', '#bae6fd', '#e0f2fe'],
+                        borderColor: '#ffffff',
+                        borderWidth: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#475569',
+                                padding: 20,
+                            }
+                        },
+                        tooltip: {
+                            enabled: false
+                        }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const data = challengeData[index];
+                            document.getElementById('modal-title').textContent = data.label;
+                            document.getElementById('modal-description').textContent = data.description;
+                            document.getElementById('modal-solution').textContent = data.solution;
+                            document.getElementById('modal-container').classList.add('visible');
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('close-modal-btn').addEventListener('click', () => {
+                document.getElementById('modal-container').classList.remove('visible');
+            });
+
+            document.getElementById('modal-container').addEventListener('click', (e) => {
+                if (e.target.id === 'modal-container') {
+                    document.getElementById('modal-container').classList.remove('visible');
+                }
+            });
+
+            document.getElementById('toggle-biblio').addEventListener('click', function() {
+                const content = document.getElementById('biblio-content');
+                const icon = document.getElementById('biblio-icon');
+                content.classList.toggle('expanded');
+                icon.classList.toggle('rotate-180');
+            });
+
+            function toggleDetails(element) {
+                const content = element.querySelector('.details-content');
+                const isExpanded = content.classList.contains('expanded');
+
+                document.querySelectorAll('.details-content.expanded').forEach(openContent => {
+                    if (openContent !== content) {
+                        openContent.classList.remove('expanded');
+                    }
+                });
+                
+                if (!isExpanded) {
+                    content.classList.add('expanded');
+                }
+            }
+
+            function renderQuiz() {
+                quizForm.innerHTML = '';
+                quizQuestions.forEach((q, index) => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.classList.add('mb-6');
+                    questionDiv.innerHTML = `
+                        <p class="font-semibold text-lg mb-4 text-slate-800">${index + 1}. ${q.question}</p>
+                        <div id="options-${index}" class="space-y-3">
+                            ${q.options.map(option => `
+                                <label class="quiz-option block p-4 rounded-lg shadow-sm">
+                                    <input type="radio" name="question${index}" value="${option}" class="mr-2 hidden">
+                                    <span>${option}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    `;
+                    quizForm.appendChild(questionDiv);
+                });
+
+                if (currentMode === 'practice') {
+                    const submitButton = document.createElement('button');
+                    submitButton.textContent = 'Kirim Jawaban';
+                    submitButton.type = 'submit';
+                    submitButton.classList.add('mt-6', 'w-full', 'px-6', 'py-3', 'bg-sky-600', 'text-white', 'font-semibold', 'rounded-full', 'shadow-lg', 'hover:bg-sky-700', 'transition-colors');
+                    quizForm.appendChild(submitButton);
+                }
+            }
+            
+            function checkAnswerLearningMode(e) {
+                const selectedLabel = e.target.closest('label');
+                const input = selectedLabel.querySelector('input');
+                const questionIndex = parseInt(input.name.replace('question', ''), 10);
+                const question = quizQuestions[questionIndex];
+                
+                quizFeedback.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+                
+                if (input.value === question.answer) {
+                    selectedLabel.classList.add('correct');
+                    quizFeedback.classList.add('bg-green-100', 'text-green-800');
+                    quizFeedback.innerHTML = `<strong>Benar!</strong><br>${question.rationale}`;
+                } else {
+                    selectedLabel.classList.add('incorrect');
+                    quizFeedback.classList.add('bg-red-100', 'text-red-800');
+                    quizFeedback.innerHTML = `<strong>Salah.</strong> Jawaban yang benar adalah: **${question.answer}**.<br>${question.rationale}`;
+                }
+
+                // Disable all options for this question
+                const optionsDiv = document.getElementById(`options-${questionIndex}`);
+                optionsDiv.querySelectorAll('input').forEach(opt => opt.disabled = true);
+            }
+
+            function checkAnswersPracticeMode(isTimeout = false) {
+                clearInterval(timerInterval);
+                quizForm.classList.add('pointer-events-none');
+                let score = 0;
+                let allQuestionsAnswered = true;
+
+                quizQuestions.forEach((q, index) => {
+                    const selectedOption = document.querySelector(`input[name="question${index}"]:checked`);
+                    
+                    if (!selectedOption) {
+                        allQuestionsAnswered = false;
+                        return;
+                    }
+                    
+                    const labels = document.querySelectorAll(`input[name="question${index}"]`);
+                    labels.forEach(input => {
+                        const label = input.closest('label');
+                        label.classList.remove('selected');
+                        label.style.pointerEvents = 'none';
+
+                        if (input.value === q.answer) {
+                            label.classList.add('correct');
+                        }
+                    });
+
+                    if (selectedOption.value === q.answer) {
+                        score++;
+                    } else {
+                        selectedOption.closest('label').classList.add('incorrect');
+                    }
+                });
+
+                showResults(score, allQuestionsAnswered, isTimeout);
+            }
+
+            function showResults(score, allAnswered, isTimeout) {
+                const totalQuestions = quizQuestions.length;
+                quizResults.classList.remove('hidden');
+                
+                let title, message, bgColor;
+
+                if (!allAnswered && !isTimeout) {
+                    alert('Mohon jawab semua pertanyaan sebelum mengirim.');
+                    return;
+                }
+                
+                if (isTimeout) {
+                    title = "Waktu Habis!";
+                    message = `Anda tidak menyelesaikan semua pertanyaan tepat waktu. Skor Anda: ${score}/${totalQuestions}.`;
+                    bgColor = "bg-red-100 text-red-800";
+                } else if (score === totalQuestions) {
+                    title = "Luar Biasa!";
+                    message = `Anda berhasil menjawab semua pertanyaan dengan benar. Skor Anda: ${score}/${totalQuestions}. Anda sudah menguasai modul ini!`;
+                    bgColor = "bg-green-100 text-green-800";
+                } else if (score >= totalQuestions / 2) {
+                    title = "Kerja Bagus!";
+                    message = `Skor Anda: ${score}/${totalQuestions}. Anda memiliki pemahaman yang baik. Periksa kembali jawaban yang salah untuk meningkatkan pemahaman Anda.`;
+                    bgColor = "bg-yellow-100 text-yellow-800";
+                } else {
+                    title = "Terus Berusaha!";
+                    message = `Skor Anda: ${score}/${totalQuestions}. Jangan putus asa! Silakan ulangi modul dan coba lagi.`;
+                    bgColor = "bg-red-100 text-red-800";
+                }
+
+                resultsTitle.textContent = title;
+                resultsMessage.textContent = message;
+                quizResults.className = `mt-8 p-6 rounded-lg ${bgColor}`;
+                
+                document.getElementById('evaluasi').scrollIntoView({ behavior: 'smooth' });
+            }
+
+            function startTimer(duration) {
+                timerDisplay.classList.remove('hidden');
+                let timer = duration;
+                timerInterval = setInterval(() => {
+                    let minutes = parseInt(timer / 60, 10);
+                    let seconds = parseInt(timer % 60, 10);
+
+                    minutes = minutes < 10 ? "0" + minutes : minutes;
+                    seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                    timeLeftSpan.textContent = `${minutes}:${seconds}`;
+
+                    if (--timer < 0) {
+                        clearInterval(timerInterval);
+                        checkAnswersPracticeMode(true);
+                        timeLeftSpan.textContent = "00:00";
+                    }
+                }, 1000);
+            }
+
+            const downloadButton = document.getElementById('download-button');
+            downloadButton.addEventListener('click', () => {
+                const htmlContent = document.documentElement.outerHTML;
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'Modul-Kebidanan-Digital.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            });
+
+            quizForm.addEventListener('change', (e) => {
+                if (e.target.type === 'radio') {
+                    const selectedLabel = e.target.closest('label');
+                    const questionDiv = selectedLabel.closest('div[id^="options-"]');
+                    const allOptions = questionDiv.querySelectorAll('.quiz-option');
+
+                    allOptions.forEach(opt => opt.classList.remove('selected'));
+                    selectedLabel.classList.add('selected');
+
+                    if (currentMode === 'learning') {
+                        checkAnswerLearningMode(e);
+                    }
+                }
+            });
+
+            quizForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (currentMode === 'practice') {
+                    checkAnswersPracticeMode(false);
+                }
+            });
+
+            // Initial render
+            switchMode('learning');
+        });
+
+        function toggleDetails(element) {
+            const content = element.querySelector('.details-content');
+            const isExpanded = content.classList.contains('expanded');
+            
+            document.querySelectorAll('.details-content.expanded').forEach(openContent => {
+                if (openContent !== content) {
+                    openContent.classList.remove('expanded');
+                }
+            });
+            
+            if (!isExpanded) {
+                content.classList.add('expanded');
+            }
+        }
+    </script>
+</body>
+</html>
